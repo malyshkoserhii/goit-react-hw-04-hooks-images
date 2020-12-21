@@ -1,0 +1,12 @@
+.App {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-gap: 16px;
+  padding-bottom: 24px;
+}
+
+.LoaderWrapper {
+  margin: 0 auto;
+  padding: 20px;
+  width: 100px;
+}
