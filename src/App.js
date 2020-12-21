@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
 import Loader from 'react-loader-spinner';
 
@@ -8,83 +8,61 @@ import Button from './components/Button';
 import fetchImages from './services/images-api';
 import s from './App.module.css';
 
-class App extends Component {
-  state = {
-    searchQuery: '',
-    images: [],
-    currentPage: 1,
-    error: null,
-    isLoading: false,
+const App = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [error, setError] = null;
+  const [isLoading, setIsLoading] = useState(false);
+  const shouldRenderLoadMoreButton = images.length > 0 && !isLoading;
+
+  useEffect(() => {
+    setIsLoading(true);
+
+    fetchImages(searchQuery, currentPage)
+      .then(hits => {
+        setImages(state => [...state, ...hits]);
+        setCurrentPage(state => state + 1);
+      })
+      .catch(setError(error))
+      .finally(() => {
+        setIsLoading(false);
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: 'smooth',
+        });
+      });
+  }, [searchQuery, currentPage]);
+
+  const onChangeQuery = query => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+    setImages([]);
+    setError(null);
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    const prevSearchQuery = prevState.searchQuery;
-    const nextSearchQuery = this.state.searchQuery;
+  return (
+    <>
+      <Searchbar onChangeForm={onChangeQuery} />
+      {error && <p>{error.message}</p>}
 
-    if (prevSearchQuery !== nextSearchQuery) {
-      this.fetchImages();
-    }
-  }
+      <ImageGallery images={images} />
 
-  onChangeQuery = query => {
-    this.setState({
-      searchQuery: query,
-      currentPage: 1,
-      images: [],
-      error: null,
-    });
-  };
+      {isLoading && (
+        <div className={s.LoaderWrapper}>
+          <Loader
+            type="ThreeDots"
+            color="#00BFFF"
+            height={80}
+            width={80}
+            timeout={3000}
+          />
+        </div>
+      )}
 
-  fetchImages = () => {
-    const { currentPage, searchQuery } = this.state;
-
-    this.setState({ isLoading: true });
-
-    fetchImages({ currentPage, searchQuery })
-      .then(hits =>
-        this.setState(prevState => ({
-          images: [...prevState.images, ...hits],
-          currentPage: prevState.currentPage + 1,
-        })),
-      )
-      .catch(error => this.setState({ error }))
-      .finally(() =>
-        this.setState({ isLoading: false }, () =>
-          window.scrollTo({
-            top: document.documentElement.scrollHeight,
-            behavior: 'smooth',
-          }),
-        ),
-      );
-  };
-
-  render() {
-    const { images, error, isLoading } = this.state;
-    const shouldRenderLoadMoreButton = images.length > 0 && !isLoading;
-
-    return (
-      <>
-        <Searchbar onChangeForm={this.onChangeQuery} />
-        {error && <p>{error.message}</p>}
-
-        <ImageGallery images={images} />
-
-        {isLoading && (
-          <div className={s.LoaderWrapper}>
-            <Loader
-              type="ThreeDots"
-              color="#00BFFF"
-              height={80}
-              width={80}
-              timeout={3000}
-            />
-          </div>
-        )}
-
-        {shouldRenderLoadMoreButton && <Button onClick={this.fetchImages} />}
-      </>
-    );
-  }
-}
+      {shouldRenderLoadMoreButton && <Button onClick={fetchImages} />}
+    </>
+  );
+};
 
 export default App;
