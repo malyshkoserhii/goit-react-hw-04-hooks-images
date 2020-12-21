@@ -25,8 +25,6 @@ const Searchbar = ({ onChangeForm }) => {
         <input
           className={s.SearchFormInput}
           type="text"
-          // autocomplete="off"
-          // autofocus
           placeholder="Search images and photos"
           onChange={handleRequest}
         />

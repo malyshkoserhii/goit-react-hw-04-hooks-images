@@ -9,36 +9,53 @@ import fetchImages from './services/images-api';
 import s from './App.module.css';
 
 const App = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [query, setQuery] = useState('');
   const [images, setImages] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [error, setError] = null;
+  const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
   const shouldRenderLoadMoreButton = images.length > 0 && !isLoading;
 
   useEffect(() => {
+    if (query === '') {
+      return;
+    }
+
     setIsLoading(true);
 
-    fetchImages(searchQuery, currentPage)
-      .then(hits => {
-        setImages(state => [...state, ...hits]);
-        setCurrentPage(state => state + 1);
-      })
-      .catch(setError(error))
-      .finally(() => {
+    async function request() {
+      try {
+        const fetch = await fetchImages(query, currentPage);
+        setImages(state => [...state, ...fetch]);
+        scrollToloadMoreBtn();
+      } catch (error) {
+        setError(error);
+      } finally {
         setIsLoading(false);
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          behavior: 'smooth',
-        });
-      });
-  }, [searchQuery, currentPage]);
+      }
+    }
+
+    if (query) request();
+  }, [query, currentPage]);
+
+  const loadMorePhotoes = () => {
+    setIsLoading(true);
+    setCurrentPage(state => state + 1);
+  };
 
   const onChangeQuery = query => {
-    setSearchQuery(query);
+    setQuery(query);
     setCurrentPage(1);
     setImages([]);
     setError(null);
+  };
+
+  const scrollToloadMoreBtn = () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth',
+    });
   };
 
   return (
@@ -60,7 +77,7 @@ const App = () => {
         </div>
       )}
 
-      {shouldRenderLoadMoreButton && <Button onClick={fetchImages} />}
+      {shouldRenderLoadMoreButton && <Button onClick={loadMorePhotoes} />}
     </>
   );
 };
