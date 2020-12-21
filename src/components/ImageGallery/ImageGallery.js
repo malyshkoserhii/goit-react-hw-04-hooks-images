@@ -1,53 +1,38 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import ImageGalleryItem from '../ImageGalleryItem';
 import Modal from '../Modal';
 import s from './ImageGallery.module.css';
 
-class ImageGallery extends Component {
-  state = {
-    modalWindowImage: null,
-    alt: null,
+const ImageGallery = ({ images }) => {
+  const [modalWindowImage, setModalWindowImage] = useState(null);
+  const [alt, setAlt] = useState(null);
+
+  const showModal = (largeImageURL, tags) => {
+    setModalWindowImage(largeImageURL);
+    setAlt(tags);
   };
 
-  showModal = (largeImageURL, tags) => {
-    this.setState({
-      modalWindowImage: largeImageURL,
-      alt: tags,
-    });
+  const onCloseModal = () => {
+    setModalWindowImage(null);
+    setAlt(null);
   };
 
-  onCloseModal = () => {
-    this.setState({
-      modalWindowImage: null,
-      alt: null,
-    });
-  };
-
-  render() {
-    const { modalWindowImage, alt } = this.state;
-    const { images } = this.props;
-
-    return (
-      <>
-        <ul className={s.ImageGallery}>
-          {images.map((image, index) => (
-            <ImageGalleryItem
-              key={index}
-              image={image}
-              onClick={this.showModal}
-            />
-          ))}
-        </ul>
-        {modalWindowImage && (
-          <Modal onCloseModal={this.onCloseModal}>
-            <img src={modalWindowImage} alt={alt} />
-          </Modal>
-        )}
-      </>
-    );
-  }
-}
+  return (
+    <>
+      <ul className={s.ImageGallery}>
+        {images.map((image, index) => (
+          <ImageGalleryItem key={index} image={image} onClick={showModal} />
+        ))}
+      </ul>
+      {modalWindowImage && (
+        <Modal onCloseModal={onCloseModal}>
+          <img src={modalWindowImage} alt={alt} />
+        </Modal>
+      )}
+    </>
+  );
+};
 
 ImageGallery.defaultProps = {
   images: [],
